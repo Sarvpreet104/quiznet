@@ -1,6 +1,7 @@
 import { homeNavLinks } from "./data";
 import Link from "next/link";
 import Image from "next/image";
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -20,65 +21,160 @@ const HomeNavbar = async () => {
   const user = await getCurrentUser();
 
   return (
-    // sticky top-0 left-0 right-0 z-50
-    <nav className="flex gap-4 justify-between items-center py-2 px-4 max-w-7xl mx-auto w-full h-16 max-h-16">
-      <Link href={"/"} className="flex justify-center items-center gap-2">
-        <div className="relative w-[50px] h-[50px]">
-          <Image
-            src={logo}
-            alt="Quiznet Logo"
-            placeholder="blur"
-            fill
-            className="scale-200 object-center object-cover"
-          />
-        </div>
-        <div className="text-foreground text-2xl font-bold">Quiznet</div>
-      </Link>
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
+      <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
+        {/* ==================== LOGO ==================== */}
 
-      <div className="hidden md:block">
-        <NavigationMenu>
-          <NavigationMenuList className="gap-1">
-            {homeNavLinks.map((link) => (
-              <NavigationMenuItem key={link.name}>
-                <NavigationMenuLink asChild>
-                  <Link href={link.href}>{link.name}</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            ))}
-          </NavigationMenuList>
-        </NavigationMenu>
-      </div>
+        <Link
+          href="/"
+          className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
+        >
+          <div className="relative size-12">
+            <Image
+              src={logo}
+              alt="QuizNet Logo"
+              fill
+              placeholder="blur"
+              className="object-contain scale-250"
+            />
+          </div>
 
-      <div className="hidden md:flex gap-2 items-center justify-center content-center">
-        <ModeToggle />
-        <LoginOptions user={user} />
-      </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-xl font-bold tracking-tight">Quiznet</span>
+          </div>
+        </Link>
 
-      <div className="md:hidden flex gap-2 justify-center items-center content-center">
-        <ModeToggle />
+        {/* ==================== DESKTOP NAVIGATION ==================== */}
 
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Menu</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                {homeNavLinks.map((link) => (
-                  <NavigationMenuLink asChild key={link.href}>
-                    <Link href={link.href}>{link.name}</Link>
+        <div className="hidden md:block">
+          <NavigationMenu>
+            <NavigationMenuList className="gap-1">
+              {homeNavLinks.map((link) => (
+                <NavigationMenuItem key={link.name}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={link.href}
+                      className="
+                        inline-flex
+                        h-9
+                        items-center
+                        justify-center
+                        rounded-lg
+                        px-4
+                        text-sm
+                        font-medium
+                        text-muted-foreground
+                        transition-all
+                        duration-200
+                        hover:bg-accent
+                        hover:text-foreground
+                      "
+                    >
+                      {link.name}
+                    </Link>
                   </NavigationMenuLink>
-                ))}
-                <NavigationMenuLink asChild>
-                  <Link href={"/login"}>Login</Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link href={"/register"}>Register</Link>
-                </NavigationMenuLink>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </div>
-    </nav>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+
+        {/* ==================== DESKTOP ACTIONS ==================== */}
+
+        <div className="hidden items-center gap-2 md:flex">
+          <ModeToggle />
+
+          <div className="h-6 w-px bg-border/70" />
+
+          <LoginOptions user={user} />
+        </div>
+
+        {/* ==================== MOBILE ACTIONS ==================== */}
+
+        <div className="flex items-center gap-4 md:hidden">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="h-9 rounded-lg px-3 text-sm">
+                  Menu
+                </NavigationMenuTrigger>
+
+                <NavigationMenuContent>
+                  <div className="grid w-[220px] gap-1 p-2">
+                    {homeNavLinks.map((link) => (
+                      <NavigationMenuLink asChild key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="
+                            flex
+                            h-10
+                            items-center
+                            rounded-lg
+                            px-3
+                            text-sm
+                            font-medium
+                            text-muted-foreground
+                            transition-colors
+                            hover:bg-accent
+                            hover:text-foreground
+                          "
+                        >
+                          {link.name}
+                        </Link>
+                      </NavigationMenuLink>
+                    ))}
+
+                    <div className="my-1 h-px bg-border/70" />
+
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href="/login"
+                        className="
+                          flex
+                          h-10
+                          items-center
+                          rounded-lg
+                          px-3
+                          text-sm
+                          font-medium
+                          transition-colors
+                          hover:bg-accent
+                        "
+                      >
+                        Login
+                      </Link>
+                    </NavigationMenuLink>
+
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href="/register"
+                        className="
+                          flex
+                          h-10
+                          items-center
+                          rounded-lg
+                          bg-primary
+                          px-3
+                          text-sm
+                          font-medium
+                          text-primary-foreground
+                          transition-opacity
+                          hover:opacity-90
+                        "
+                      >
+                        Register
+                      </Link>
+                    </NavigationMenuLink>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          <ModeToggle />
+        </div>
+      </nav>
+    </header>
   );
 };
 

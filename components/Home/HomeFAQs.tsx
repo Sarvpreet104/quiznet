@@ -1,5 +1,7 @@
 import { FaQuestion } from "react-icons/fa";
+
 import MyBadge from "@/components/MyBadge";
+
 import {
   Accordion,
   AccordionContent,
@@ -7,56 +9,146 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const HomeFAQs = async () => {
+const HomeFAQs = () => {
   const items = [
     {
       value: "item-1",
-      trigger: "How do I reset my password?",
+      trigger: "How do I create a Quiznet account?",
       content:
-        "Click on 'Forgot Password' on the login page, enter your email address, and we'll send you a link to reset your password. The link will expire in 24 hours.",
+        "Click the Register button and fill in your first name, last name, college ID, email, and password. Once your account is created, you can log in and access the available quizzes.",
     },
     {
       value: "item-2",
-      trigger: "Can I change my subscription plan?",
+      trigger: "How do I attempt a quiz?",
       content:
-        "Yes, you can upgrade or downgrade your plan at any time from your account settings. Changes will be reflected in your next billing cycle.",
+        "After logging in, go to your dashboard and choose an available quiz. Read the instructions, start the quiz, answer the questions, and submit your answers when you are finished.",
     },
     {
       value: "item-3",
-      trigger: "What payment methods do you accept?",
+      trigger: "Can I see my quiz results?",
       content:
-        "We accept all major credit cards, PayPal, and bank transfers. All payments are processed securely through our payment partners.",
+        "Yes. After submitting a quiz, your result can be viewed through your dashboard. You can use your results to track your performance and identify areas where you can improve.",
+    },
+    {
+      value: "item-4",
+      trigger: "Can I retake a quiz?",
+      content:
+        "Whether you can retake a quiz depends on how the quiz has been configured by the administrator. If retakes are enabled, you will be able to attempt the quiz again.",
+    },
+    {
+      value: "item-5",
+      trigger: "What happens if I leave a quiz before submitting?",
+      content:
+        "Your quiz attempt may not be completed until you submit your answers. Make sure you finish and submit the quiz before leaving the page to ensure your answers are recorded.",
+    },
+    {
+      value: "item-6",
+      trigger: "How do I reset my password?",
+      content:
+        "If you forget your password, use the password recovery option on the login page and follow the instructions to regain access to your Quiznet account.",
     },
   ];
 
   return (
-    <div className="max-w-7xl w-full mx-auto px-4 py-4" id="faqs">
-      {/* content heading */}
-      <div className="flex flex-col gap-6 justify-center items-center pt-14 pb-10">
+    <section className="mx-auto w-full max-w-7xl px-4 py-16 md:py-20" id="faqs">
+      {/* ==================== SECTION HEADING ==================== */}
+
+      <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-5 text-center">
         <MyBadge icon={FaQuestion} label="FAQs" />
 
-        <h2 className="order-two-heading text-center">People Also Ask</h2>
+        <div className="space-y-3">
+          <h2 className="order-two-heading">
+            People Also <span className="text-primary">Ask</span>
+          </h2>
+
+          <p className="description-text mx-auto max-w-xl">
+            Got questions? Find quick answers to some of the most common
+            questions about Quiznet.
+          </p>
+        </div>
       </div>
 
-      {/*  */}
-      <Accordion
-        type="single"
-        collapsible
-        defaultValue="item-1"
-        className="rounded-lg border border-border my-6 md:my-10"
-      >
-        {items.map((item) => (
-          <AccordionItem
-            key={item.value}
-            value={item.value}
-            className="border-b px-4 last:border-b-0"
-          >
-            <AccordionTrigger>{item.trigger}</AccordionTrigger>
-            <AccordionContent>{item.content}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </div>
+      {/* ==================== FAQ ACCORDION ==================== */}
+
+      <div className="mx-auto mt-12 max-w-3xl md:mt-14">
+        <Accordion
+          type="single"
+          collapsible
+          defaultValue="item-1"
+          className="space-y-3"
+        >
+          {items.map((item, index) => (
+            <AccordionItem
+              key={item.value}
+              value={item.value}
+              className="
+                overflow-hidden
+                rounded-xl
+                border
+                border-border/70
+                bg-card
+                px-5
+                shadow-sm
+                transition-all
+                duration-200
+                hover:border-primary/30
+                hover:shadow-md
+                data-[state=open]:border-primary/40
+              "
+            >
+              <AccordionTrigger
+                className="
+                  gap-4
+                  py-5
+                  text-left
+                  text-sm
+                  font-semibold
+                  no-underline
+                  hover:no-underline
+                  md:text-base
+                "
+              >
+                <div className="flex min-w-0 items-center gap-4">
+                  {/* Question number */}
+
+                  <div
+                    className="
+                      flex
+                      size-9
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-lg
+                      bg-primary/10
+                      text-xs
+                      font-bold
+                      text-primary
+                    "
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+
+                  <span>{item.trigger}</span>
+                </div>
+              </AccordionTrigger>
+
+              <AccordionContent
+                className="
+                  pb-5
+                  pl-13
+                  pr-6
+                  text-sm
+                  leading-6
+                  text-muted-foreground
+                "
+              >
+                {item.content}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </section>
   );
 };
 

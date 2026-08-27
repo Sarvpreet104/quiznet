@@ -48,14 +48,16 @@ const RegisterForm = () => {
       router.push("/login");
     } catch (error) {
       console.error("Registration error:", error);
+
       setServerError("Something went wrong. Please try again.");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="flex flex-col gap-4 px-0 sm:px-4">
-        <div className="flex gap-4 flex-col md:flex-row">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="w-full">
+      <div className="flex flex-col gap-4">
+        {/* Name */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
             {...register("first_name")}
             icon={FaUser}
@@ -79,6 +81,7 @@ const RegisterForm = () => {
           />
         </div>
 
+        {/* College ID */}
         <Input
           {...register("college_id")}
           icon={FaIdCard}
@@ -90,6 +93,7 @@ const RegisterForm = () => {
           error={errors.college_id?.message}
         />
 
+        {/* Email */}
         <Input
           {...register("email")}
           icon={FaEnvelope}
@@ -101,7 +105,8 @@ const RegisterForm = () => {
           error={errors.email?.message}
         />
 
-        <div className="flex gap-4 flex-col md:flex-row">
+        {/* Password */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
             {...register("password")}
             icon={FaLock}
@@ -109,7 +114,7 @@ const RegisterForm = () => {
             ID="password"
             type="password"
             autoComplete="new-password"
-            placeholder="********"
+            placeholder="••••••••"
             error={errors.password?.message}
           />
 
@@ -120,20 +125,43 @@ const RegisterForm = () => {
             ID="confirmpassword"
             type="password"
             autoComplete="new-password"
-            placeholder="********"
+            placeholder="••••••••"
             error={errors.confirm_password?.message}
           />
         </div>
 
+        {/* Server error */}
         {serverError && (
-          <p className="text-sm text-destructive">{serverError}</p>
+          <div
+            role="alert"
+            className="
+              rounded-xl
+              border
+              border-destructive/20
+              bg-destructive/10
+              px-4
+              py-3
+              text-sm
+              leading-5
+              text-destructive
+            "
+          >
+            {serverError}
+          </div>
         )}
 
+        {/* Submit */}
         <PrimaryButton
-          name={isSubmitting ? "Creating Account..." : "Register"}
+          name={isSubmitting ? "Creating Account..." : "Create Account"}
           type="submit"
           disabled={isSubmitting}
-          className="h-12 text-lg mt-8"
+          className="
+            mt-4
+            h-12
+            w-full
+            text-base
+            font-semibold
+          "
           icon={FaSignInAlt}
         />
       </div>

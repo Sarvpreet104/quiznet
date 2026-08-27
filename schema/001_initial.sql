@@ -249,7 +249,7 @@ CREATE TABLE quiz_responses (
 
     selected_option_id UUID
         REFERENCES options(id)
-        ON DELETE SET NULL,
+        ON DELETE SET NULL, 
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -263,3 +263,19 @@ ON quiz_responses(attempt_id);
 
 CREATE INDEX idx_quiz_responses_question
 ON quiz_responses(question_id);
+
+
+-- quizlist
+CREATE TABLE IF NOT EXISTS quiz_student_lists (
+    quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+    list_id UUID NOT NULL REFERENCES student_lists(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (quiz_id, list_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_student_lists_quiz_id
+    ON quiz_student_lists(quiz_id);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_student_lists_list_id
+    ON quiz_student_lists(list_id);

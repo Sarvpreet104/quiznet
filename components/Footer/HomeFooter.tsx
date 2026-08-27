@@ -1,109 +1,76 @@
 import Image from "next/image";
-import Link from "next/link";
 import logo from "@/public/images/home-page/quiznet-logo.png";
-import { getCurrentUser } from "@/lib/auth";
-import { MdSocialDistance } from "react-icons/md";
 import { Separator } from "../ui/separator";
+import { GraduationCap } from "lucide-react";
 
-const HomeFooter = async () => {
-  const user = await getCurrentUser();
-  const is_admin = user?.is_admin;
-
-  const footerLinks = [
-    {
-      name: "Company",
-      links: [
-        { label: "Home", href: "/" },
-        {
-          label: "Dashboard",
-          href: is_admin ? "/admin/dashboard" : "/dashboard",
-        },
-        {
-          label: "Quizzes",
-          href: is_admin ? "/admin/quizzes" : "/dashboard/quizzes",
-        },
-        {
-          label: "Result",
-          href: is_admin ? "/admin/dashboard" : "/dashboard/results",
-        },
-      ],
-    },
-    {
-      name: "Policy",
-      links: [
-        { label: "Privacy", href: "/privacy" },
-        { label: "Terms", href: "/terms" },
-      ],
-    },
-    {
-      name: "Social",
-      links: [
-        { label: "Instagram", href: "https://www.instagram.com" },
-        { label: "Linkedin", href: "https://www.linkedin.com" },
-        { label: "Github", href: "https://www.github.com" },
-      ],
-    },
-  ];
-
+const HomeFooter = () => {
   return (
-    <footer className="border-t border-border flex flex-col justify-center items-center py-10 px-4">
-      <div className="mycontainer flex flex-col gap-6">
-        {/* main content */}
-        <div className="flex flex-col md:flex-row gap-20 justify-between items-center">
-          {/* branding */}
-          <div className="flex flex-col">
-            <div className="relative w-20 h-20">
-              <Image
-                src={logo}
-                alt="Quiznet Logo"
-                fill
-                placeholder="blur"
-                className="object-cover object-center scale-200"
-              />
+    <footer className="mt-20 border-t border-border/60 bg-muted/20">
+      <div className="mx-auto w-full max-w-7xl px-4 py-12 md:py-14">
+        {/* Main footer content */}
+        <div className="flex flex-col items-center justify-between gap-8 md:flex-row md:items-start">
+          {/* Branding */}
+          <div className="flex max-w-md flex-col items-center text-center md:items-start md:text-left">
+            <div className="flex items-center gap-3">
+              {/* Logo */}
+              <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-primary/10">
+                <Image
+                  src={logo}
+                  alt="Quiznet Logo"
+                  fill
+                  placeholder="blur"
+                  className="scale-150 object-cover object-center"
+                />
+              </div>
+
+              {/* Name */}
+              <div>
+                <h2 className="text-xl font-bold tracking-tight">Quiznet</h2>
+
+                <p className="text-xs font-medium text-muted-foreground">
+                  Online testing platform
+                </p>
+              </div>
             </div>
-            <div className="text-3xl font-bold">Quiznet</div>
+
+            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+              A simple and reliable platform for conducting online tests,
+              attempting quizzes, and tracking student performance.
+            </p>
           </div>
 
-          {/* links container */}
-          <div className="flex flex-wrap gap-4 md:gap-4 w-full justify-around md:justify-end text-center md:text-left">
-            {footerLinks.map((category) => {
-              return (
-                // link category
-                <div
-                  className="basis-32 flex flex-col gap-2"
-                  key={category.name}
-                >
-                  {/* category heading */}
-                  <div className="text-lg font-semibold px-2 text-foreground">
-                    {category.name}
-                  </div>
-                  {/* category links */}
-                  <div className="flex flex-col">
-                    {category.links.map((link) => {
-                      return (
-                        <Link
-                          href={link.href}
-                          className="text-base text-muted-foreground hover:text-foreground active:text-foreground transition-all duration-300 ease-in-out px-2 py-1"
-                          key={link.label}
-                        >
-                          {link.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+          {/* Right-side info */}
+          <div className="flex flex-col items-center gap-3 md:items-end">
+            <div className="flex items-center gap-2 rounded-full border border-border/60 bg-background px-4 py-2 shadow-sm">
+              <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <GraduationCap className="size-4" />
+              </span>
+
+              <span className="text-sm font-medium">Built for students</span>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground md:text-right">
+              Learn. Practice. Improve.
+            </p>
           </div>
         </div>
-        {/* main content ends here */}
 
-        {/* seperator */}
-        <Separator />
+        {/* Divider */}
+        <Separator className="my-8" />
 
-        {/* watermark */}
-        <div className="text-sm text-muted-foreground text-center">
-          Made with &#128151; by Sarvpreet Singh.
+        {/* Bottom */}
+        <div className="flex flex-col items-center justify-between gap-3 text-center md:flex-row md:text-left">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Quiznet. All rights reserved.
+          </p>
+
+          <p className="text-xs text-muted-foreground">
+            Made with{" "}
+            <span className="mx-1 text-red-500" aria-label="love" role="img">
+              ♥
+            </span>{" "}
+            by Sarvpreet Singh.
+          </p>
         </div>
       </div>
     </footer>

@@ -1,4 +1,5 @@
 import SecondaryButton from "@/components/Buttons/SecondaryButton";
+
 import {
   FaArrowLeft,
   FaStar,
@@ -6,10 +7,14 @@ import {
   FaChartBar,
   FaLock,
 } from "react-icons/fa";
+
 import Image from "next/image";
 import Link from "next/link";
+
 import logo from "@/public/images/home-page/quiznet-logo.png";
+
 import MyBadge from "@/components/MyBadge";
+
 import {
   Card,
   CardContent,
@@ -18,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import RegisterForm from "@/components/Auth/RegisterForm";
 
 const Register = () => {
@@ -29,7 +35,7 @@ const Register = () => {
     },
     {
       heading: "Secure and Private",
-      description: "Your data is safe with enterprise-grade security.",
+      description: "Your personal data stays protected and private.",
       icon: FaLock,
     },
     {
@@ -40,109 +46,192 @@ const Register = () => {
   ];
 
   return (
-    <div className="max-w-7xl w-full min-h-screen mx-auto px-4 py-4 flex flex-col justify-center content-center">
-      {/* go home */}
-      <div>
-        <SecondaryButton
-          name="Home"
-          href="/"
-          icon={FaArrowLeft}
-          className="flex-row-reverse"
-        />
+    <main className="relative min-h-screen overflow-hidden bg-background">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 size-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-32 size-[28rem] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
-      {/* main */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 my-10">
-        {/* content */}
-        <div className="order-1 md:order-0 flex flex-col gap-4">
-          <div className="flex flex-col">
-            <div className="relative w-20 h-20">
-              <Image
-                src={logo}
-                alt="Quiznet Logo"
-                fill
-                placeholder="blur"
-                className="object-cover object-center scale-200"
+      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+        {/* Top navigation */}
+        <div className="flex shrink-0">
+          <SecondaryButton
+            name="Home"
+            href="/"
+            icon={FaArrowLeft}
+            className="flex-row-reverse"
+          />
+        </div>
+
+        {/* Main content */}
+        <div className="grid flex-1 items-center gap-12 py-10 lg:grid-cols-2 lg:gap-20">
+          {/* ==================== LEFT CONTENT ==================== */}
+
+          <section className="order-2 flex flex-col justify-center lg:order-1">
+            {/* Logo */}
+            <div className="mb-6 flex flex-col">
+              <div className="relative size-20">
+                <Image
+                  src={logo}
+                  alt="QuizNet Logo"
+                  fill
+                  placeholder="blur"
+                  className="object-contain scale-200"
+                />
+              </div>
+
+              <span className="text-3xl font-bold tracking-tight">QuizNet</span>
+            </div>
+
+            {/* Badge */}
+            <div className="mb-5">
+              <MyBadge
+                icon={FaStar}
+                label="Join 100+ students across the college"
               />
             </div>
-            <div className="text-3xl font-bold">Quiznet</div>
-          </div>
 
-          <MyBadge
-            icon={FaStar}
-            label="Join 100+ students across the college"
-          />
+            {/* Heading */}
+            <h1 className="max-w-xl text-4xl font-bold tracking-tight sm:text-5xl">
+              Create Your <span className="text-primary">Account</span>
+            </h1>
 
-          <h2 className="order-two-heading">
-            Create Your <span className="text-primary">Account</span>
-          </h2>
+            <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground sm:text-lg">
+              Get started with QuizNet and access quizzes, assessments, results,
+              and performance insights in one place.
+            </p>
 
-          <p className="description-text">
-            Get started with Quiznet and access all available quizzes and tests.
-          </p>
-
-          <Card>
-            <CardContent className="flex flex-col gap-4">
+            {/* Features */}
+            <div className="mt-8 grid gap-3">
               {features.map((feature) => {
+                const Icon = feature.icon;
+
                 return (
-                  <div className="flex gap-4" key={feature.heading}>
-                    <div className="flex justify-center items-center content-center rounded-full size-12 shrink-0 overflow-hidden bg-secondary border border-border text-2xl text-foreground">
-                      {<feature.icon />}
+                  <div
+                    key={feature.heading}
+                    className="
+                      group
+                      flex
+                      items-center
+                      gap-4
+                      rounded-2xl
+                      border
+                      border-border/60
+                      bg-card/60
+                      p-4
+                      backdrop-blur-sm
+                      transition-all
+                      duration-200
+                      hover:border-primary/30
+                      hover:bg-card
+                      hover:shadow-sm
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        size-11
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-xl
+                        border
+                        border-border/60
+                        bg-secondary
+                        text-foreground
+                        transition-colors
+                        group-hover:bg-primary
+                        group-hover:text-primary-foreground
+                      "
+                    >
+                      <Icon className="size-4" />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                      <h4 className="order-four-heading">{feature.heading}</h4>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold">{feature.heading}</h3>
 
-                      <p className="description-text">{feature.description}</p>
+                      <p className="mt-0.5 text-sm leading-5 text-muted-foreground">
+                        {feature.description}
+                      </p>
                     </div>
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* register card */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col mb-4">
-              <div className="relative w-20 h-20">
-                <Image
-                  src={logo}
-                  alt="Quiznet Logo"
-                  fill
-                  placeholder="blur"
-                  className="object-cover object-center scale-150"
-                />
-              </div>
-              <div className="text-2xl font-bold">Quiznet</div>
             </div>
-            <CardTitle>Register Account</CardTitle>
-            <CardDescription>
-              Make your account for Quiznet by filling following details.
-            </CardDescription>
-          </CardHeader>
+          </section>
 
-          <CardContent className="flex-1">
-            <RegisterForm />
-          </CardContent>
+          {/* ==================== REGISTER CARD ==================== */}
 
-          <CardFooter>
-            <p className="w-full text-center">
-              Already have an account?{" "}
-              <span>
-                <Link
-                  href={"/login"}
-                  className="text-blue-400 hover:text-primary transition-all duration-300 ease-in-out hover:underline"
-                >
-                  Login
-                </Link>
-              </span>{" "}
-            </p>
-          </CardFooter>
-        </Card>
+          <section className="order-1 flex justify-center lg:order-2">
+            <Card
+              className="
+                w-full
+                max-w-md
+                border-border/60
+                bg-card/90
+                shadow-xl
+                shadow-black/5
+                backdrop-blur-xl
+                dark:shadow-black/20
+              "
+            >
+              <CardHeader className="space-y-5 pb-6">
+                {/* Card logo */}
+                <div className="flex flex-col">
+                  <div className="relative size-14">
+                    <Image
+                      src={logo}
+                      alt="QuizNet Logo"
+                      fill
+                      placeholder="blur"
+                      className="object-contain scale-200"
+                    />
+                  </div>
+
+                  <span className="text-xl font-bold tracking-tight">
+                    QuizNet
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <CardTitle className="text-2xl">
+                    Create your account
+                  </CardTitle>
+
+                  <CardDescription className="text-sm leading-6">
+                    Fill in the details below to get started with QuizNet.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <RegisterForm />
+              </CardContent>
+
+              <CardFooter className="border-t border-border/50 pt-6">
+                <p className="w-full text-center text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link
+                    href="/login"
+                    className="
+                      font-medium
+                      text-primary
+                      transition-colors
+                      hover:text-primary/80
+                      hover:underline
+                      underline-offset-4
+                    "
+                  >
+                    Log in
+                  </Link>
+                </p>
+              </CardFooter>
+            </Card>
+          </section>
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 

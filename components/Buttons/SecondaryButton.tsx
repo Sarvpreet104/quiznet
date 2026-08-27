@@ -8,6 +8,8 @@ type SecondaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   name: string;
   href?: string;
   icon?: IconType;
+  className?: string;
+  variant?: "outline" | "destructive";
 };
 
 const SecondaryButton = ({
@@ -15,6 +17,8 @@ const SecondaryButton = ({
   href,
   icon: Icon,
   className,
+  type = "button",
+  variant = "outline",
   ...props
 }: SecondaryButtonProps) => {
   if (href) {
@@ -35,7 +39,8 @@ const SecondaryButton = ({
 
   return (
     <Button
-      variant="outline"
+      type={type}
+      variant={variant}
       size="lg"
       className={cn("gap-2 text-foreground", className)}
       {...props}

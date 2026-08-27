@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  PlusCircle,
   BookOpenCheck,
   GraduationCap,
   LayoutDashboard,
   LogOut,
-  ShieldCheck,
-  Users,
+  Trophy,
+  User,
 } from "lucide-react";
 
 import {
@@ -30,35 +29,27 @@ import { logoutUser } from "@/app/actions/auth";
 const mainNavigation = [
   {
     title: "Dashboard",
-    href: "/admin",
+    href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "Quizzes",
-    href: "/admin/quizzes",
+    href: "/dashboard/quizzes",
     icon: BookOpenCheck,
   },
   {
-    title: "Student Lists",
-    href: "/admin/studentlists",
-    icon: Users,
+    title: "Results",
+    href: "/dashboard/results",
+    icon: Trophy,
   },
 ];
 
-const quickAction = [
-  {
-    title: "Create Quiz",
-    href: "/admin/quizzes/create",
-    icon: PlusCircle,
-  },
-];
-
-const AdminSidebar = () => {
+const StudentSidebar = () => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/admin") {
-      return pathname === "/admin";
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
     }
 
     return pathname.startsWith(href);
@@ -70,7 +61,9 @@ const AdminSidebar = () => {
       variant="sidebar"
       className="border-r border-border/60"
     >
-      {/* ==================== HEADER ==================== */}
+      {/* ================================================== */}
+      {/* HEADER */}
+      {/* ================================================== */}
 
       <SidebarHeader className="border-b border-border/60 p-3">
         <div
@@ -80,15 +73,18 @@ const AdminSidebar = () => {
             group-data-[collapsible=icon]:px-0
           "
         >
+          {/* Logo */}
           <div
             className="
               flex size-9 shrink-0 items-center justify-center
-              rounded-xl bg-primary text-primary-foreground shadow-sm
+              rounded-xl bg-primary text-primary-foreground
+              shadow-sm
             "
           >
             <GraduationCap className="size-5" />
           </div>
 
+          {/* Brand */}
           <div
             className="
               flex min-w-0 flex-col
@@ -100,16 +96,20 @@ const AdminSidebar = () => {
             </span>
 
             <span className="text-[11px] font-medium text-muted-foreground">
-              Administration
+              Student Portal
             </span>
           </div>
         </div>
       </SidebarHeader>
 
-      {/* ==================== CONTENT ==================== */}
+      {/* ================================================== */}
+      {/* CONTENT */}
+      {/* ================================================== */}
 
       <SidebarContent className="px-0 py-4">
-        {/* ==================== OVERVIEW ==================== */}
+        {/* ================================================== */}
+        {/* MAIN NAVIGATION */}
+        {/* ================================================== */}
 
         <SidebarGroup>
           <SidebarGroupLabel
@@ -145,15 +145,12 @@ const AdminSidebar = () => {
                         px-3
                         transition-all
                         duration-200
-
                         hover:bg-accent
                         hover:text-accent-foreground
-
                         data-[active=true]:bg-primary
                         data-[active=true]:font-medium
                         data-[active=true]:text-primary-foreground
                         data-[active=true]:shadow-sm
-
                         group-data-[collapsible=icon]:mx-auto
                         group-data-[collapsible=icon]:size-10
                         group-data-[collapsible=icon]:px-0
@@ -167,7 +164,6 @@ const AdminSidebar = () => {
                           w-full
                           items-center
                           gap-2
-
                           group-data-[collapsible=icon]:justify-center
                           group-data-[collapsible=icon]:gap-0
                         "
@@ -197,95 +193,9 @@ const AdminSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ==================== QUICK ACTIONS ==================== */}
-
-        <SidebarGroup className="mt-5">
-          <SidebarGroupLabel
-            className="
-              px-3
-              text-[11px]
-              font-semibold
-              uppercase
-              tracking-wider
-              text-muted-foreground
-              group-data-[collapsible=icon]:hidden
-            "
-          >
-            Quick Actions
-          </SidebarGroupLabel>
-
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {quickAction.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={item.title}
-                      className="
-                        h-10
-                        w-full
-                        rounded-xl
-                        px-3
-                        transition-all
-                        duration-200
-
-                        hover:bg-accent
-                        hover:text-accent-foreground
-
-                        data-[active=true]:bg-primary
-                        data-[active=true]:font-medium
-                        data-[active=true]:text-primary-foreground
-                        data-[active=true]:shadow-sm
-
-                        group-data-[collapsible=icon]:mx-auto
-                        group-data-[collapsible=icon]:size-10
-                        group-data-[collapsible=icon]:px-0
-                      "
-                    >
-                      <Link
-                        href={item.href}
-                        className="
-                          flex
-                          h-full
-                          w-full
-                          items-center
-                          gap-2
-
-                          group-data-[collapsible=icon]:justify-center
-                          group-data-[collapsible=icon]:gap-0
-                        "
-                      >
-                        <Icon
-                          className="
-                            size-4
-                            shrink-0
-                            stroke-[2]
-                          "
-                        />
-
-                        <span
-                          className="
-                            truncate
-                            group-data-[collapsible=icon]:hidden
-                          "
-                        >
-                          {item.title}
-                        </span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ==================== ADMIN INFO ==================== */}
+        {/* ================================================== */}
+        {/* STUDENT INFO */}
+        {/* ================================================== */}
 
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
@@ -312,14 +222,14 @@ const AdminSidebar = () => {
                     text-primary
                   "
                 >
-                  <ShieldCheck className="size-4" />
+                  <GraduationCap className="size-4" />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold">Administrator</p>
+                  <p className="text-xs font-semibold">Student Portal</p>
 
                   <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
-                    You have full access to QuizNet management.
+                    Take quizzes, track your progress and view your results.
                   </p>
                 </div>
               </div>
@@ -328,7 +238,9 @@ const AdminSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* ==================== FOOTER ==================== */}
+      {/* ================================================== */}
+      {/* FOOTER */}
+      {/* ================================================== */}
 
       <SidebarFooter className="border-t border-border/60 p-2">
         <SidebarMenu>
@@ -344,10 +256,8 @@ const AdminSidebar = () => {
                   px-3
                   text-destructive
                   transition-colors
-
                   hover:bg-destructive/10
                   hover:text-destructive
-
                   group-data-[collapsible=icon]:mx-auto
                   group-data-[collapsible=icon]:size-10
                   group-data-[collapsible=icon]:justify-center
@@ -368,4 +278,4 @@ const AdminSidebar = () => {
   );
 };
 
-export default AdminSidebar;
+export default StudentSidebar;

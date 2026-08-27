@@ -50,20 +50,34 @@ export default async function StudentListsPage() {
               href={`/admin/studentlists/${list.id}`}
               className="group"
             >
-              <Card className="transition-all duration-200 hover:-translate-y-1 hover:border-primary">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex size-12 items-center justify-center rounded-xl bg-secondary">
+              <Card className="group h-full transition-all duration-200 hover:-translate-y-1 hover:border-primary hover:shadow-md">
+                <CardContent className="flex h-full flex-col p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                       <FaUsers className="text-xl" />
                     </div>
+
+                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
+                      Student List
+                    </span>
                   </div>
 
-                  <h2 className="mt-5 text-xl font-semibold">{list.name}</h2>
+                  <div className="mt-5">
+                    <h2 className="truncate text-xl font-semibold">
+                      {list.name}
+                    </h2>
 
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {list.member_count}{" "}
-                    {list.member_count === 1 ? "student" : "students"}
-                  </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {list.member_count}{" "}
+                      {list.member_count === 1 ? "student" : "students"}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto pt-6">
+                    <span className="text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                      Manage list →
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             </Link>

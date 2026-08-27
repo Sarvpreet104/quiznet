@@ -17,6 +17,7 @@ import { Input as ShadcnInput } from "@/components/ui/input";
 
 import SecondaryButton from "@/components/Buttons/SecondaryButton";
 import PrimaryButton from "@/components/Buttons/PrimaryButton";
+import DeleteStudentListButton from "@/components/admin/studentlists/DeleteStudentListButton";
 
 import {
   addStudentToList,
@@ -136,23 +137,32 @@ export default function StudentListManager({
             className="mb-6 flex-row-reverse"
           />
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
+                <FaUsers />
+                Student List
+              </div>
+
               <h1 className="text-3xl font-bold tracking-tight">{list.name}</h1>
 
-              <p className="mt-1 text-muted-foreground">
+              <p className="mt-2 text-muted-foreground">
                 Manage the students in this list.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 rounded-xl border bg-secondary px-4 py-2">
-              <FaUsers />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 rounded-xl border bg-secondary px-4 py-2">
+                <FaUsers className="text-muted-foreground" />
 
-              <span className="font-medium">{members.length}</span>
+                <span className="font-semibold">{members.length}</span>
 
-              <span className="text-muted-foreground">
-                {members.length === 1 ? "student" : "students"}
-              </span>
+                <span className="text-sm text-muted-foreground">
+                  {members.length === 1 ? "student" : "students"}
+                </span>
+              </div>
+
+              <DeleteStudentListButton listId={list.id} listName={list.name} />
             </div>
           </div>
         </div>

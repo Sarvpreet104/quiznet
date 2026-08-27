@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FaUsers } from "react-icons/fa";
+import { FaUsers, FaArrowLeft, FaPlus } from "react-icons/fa";
 
 import Input from "@/components/Forms/Input";
 import PrimaryButton from "@/components/Buttons/PrimaryButton";
@@ -42,41 +42,84 @@ export default function CreateStudentListForm() {
     }
 
     router.push("/admin/studentlists");
-    router.refresh();
   }
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       noValidate
-      className="flex flex-col gap-6"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
     >
-      <Input
-        {...register("name")}
-        icon={FaUsers}
-        label="List Name"
-        ID="name"
-        type="text"
-        placeholder="e.g. CSE 3rd Year"
-        autoComplete="off"
-        error={errors.name?.message}
-      />
+      {/* Header */}
+      <div className="border-b border-border bg-muted/30 px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <FaUsers className="text-lg" />
+          </div>
 
-      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+          <div>
+            <h2 className="font-semibold">Student list details</h2>
 
-      <div className="flex justify-end gap-3">
-        <SecondaryButton
-          name="Cancel"
-          href="/admin/studentlists"
-          disabled={isSubmitting}
-        />
+            <p className="text-sm text-muted-foreground">
+              Give your list a name so you can easily assign it to quizzes.
+            </p>
+          </div>
+        </div>
+      </div>
 
-        <PrimaryButton
-          name={isSubmitting ? "Creating..." : "Create List"}
-          type="submit"
-          disabled={isSubmitting}
+      {/* Form body */}
+      <div className="flex flex-col gap-6 px-6 py-7">
+        <Input
+          {...register("name")}
           icon={FaUsers}
+          label="List Name"
+          ID="name"
+          type="text"
+          placeholder="e.g. CSE 3rd Year"
+          autoComplete="off"
+          error={errors.name?.message}
+          disabled={isSubmitting}
         />
+
+        {/* Helpful hint */}
+        <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Tip:</span> Use a
+            clear name such as{" "}
+            <span className="font-medium text-foreground">CSE 3rd Year</span> or{" "}
+            <span className="font-medium text-foreground">
+              Web Development Lab
+            </span>
+            .
+          </p>
+        </div>
+
+        {/* Server error */}
+        {serverError && (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3"
+          >
+            <p className="text-sm text-destructive">{serverError}</p>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
+          <SecondaryButton
+            name="Cancel"
+            href="/admin/studentlists"
+            icon={FaArrowLeft}
+            disabled={isSubmitting}
+          />
+
+          <PrimaryButton
+            name={isSubmitting ? "Creating..." : "Create List"}
+            type="submit"
+            disabled={isSubmitting}
+            icon={isSubmitting ? undefined : FaPlus}
+          />
+        </div>
       </div>
     </form>
   );

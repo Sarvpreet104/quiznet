@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { FaEnvelope, FaLock, FaSignInAlt } from "react-icons/fa";
 
 import Input from "@/components/Forms/Input";
@@ -50,8 +51,9 @@ const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="flex flex-col gap-6 px-0 sm:px-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="w-full">
+      <div className="flex flex-col gap-5">
+        {/* Email */}
         <Input
           {...register("email")}
           icon={FaEnvelope}
@@ -63,6 +65,7 @@ const LoginForm = () => {
           error={errors.email?.message}
         />
 
+        {/* Password */}
         <Input
           {...register("password")}
           icon={FaLock}
@@ -70,20 +73,43 @@ const LoginForm = () => {
           ID="password"
           type="password"
           autoComplete="current-password"
-          placeholder="********"
+          placeholder="••••••••"
           error={errors.password?.message}
         />
 
+        {/* Server error */}
         {serverError && (
-          <p className="text-sm text-destructive">{serverError}</p>
+          <div
+            role="alert"
+            className="
+              rounded-xl
+              border
+              border-destructive/20
+              bg-destructive/10
+              px-4
+              py-3
+              text-sm
+              leading-5
+              text-destructive
+            "
+          >
+            {serverError}
+          </div>
         )}
 
+        {/* Submit */}
         <PrimaryButton
           name={isSubmitting ? "Logging in..." : "Login"}
           href=""
           type="submit"
           disabled={isSubmitting}
-          className="h-12 text-lg"
+          className="
+            mt-2
+            h-12
+            w-full
+            text-base
+            font-semibold
+          "
           icon={FaSignInAlt}
         />
       </div>

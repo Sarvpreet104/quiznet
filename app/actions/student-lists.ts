@@ -3,7 +3,10 @@
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/authorization";
 
-// creating student list
+// ============================================================
+// CREATE STUDENT LIST
+// ============================================================
+
 export async function createStudentList(name: string) {
   const admin = await requireAdmin();
 
@@ -55,7 +58,10 @@ export async function createStudentList(name: string) {
   }
 }
 
-// getting student lists
+// ============================================================
+// GET STUDENT LISTS
+// ============================================================
+
 export async function getStudentLists() {
   const admin = await requireAdmin();
 
@@ -63,13 +69,21 @@ export async function getStudentLists() {
     const result = await pool.query(
       `
       SELECT
-        id,
-        name,
-        created_at,
-        updated_at
-      FROM student_lists
-      WHERE owner_id = $1
-      ORDER BY created_at DESC
+        sl.id,
+        sl.name,
+        sl.created_at,
+        sl.updated_at,
+        COUNT(slm.user_id)::INTEGER AS member_count
+      FROM student_lists sl
+      LEFT JOIN student_list_members slm
+        ON slm.list_id = sl.id
+      WHERE sl.owner_id = $1
+      GROUP BY
+        sl.id,
+        sl.name,
+        sl.created_at,
+        sl.updated_at
+      ORDER BY sl.created_at DESC
       `,
       [admin.id],
     );
@@ -89,7 +103,10 @@ export async function getStudentLists() {
   }
 }
 
-// get single list
+// ============================================================
+// GET SINGLE STUDENT LIST
+// ============================================================
+
 export async function getStudentList(listId: string) {
   const admin = await requireAdmin();
 
@@ -130,7 +147,10 @@ export async function getStudentList(listId: string) {
   }
 }
 
-// updating a list
+// ============================================================
+// UPDATE STUDENT LIST
+// ============================================================
+
 export async function updateStudentList(listId: string, name: string) {
   const admin = await requireAdmin();
 
@@ -190,9 +210,19 @@ export async function updateStudentList(listId: string, name: string) {
   }
 }
 
-// deleting student list
+// ============================================================
+// DELETE STUDENT LIST
+// ============================================================
+
 export async function deleteStudentList(listId: string) {
   const admin = await requireAdmin();
+
+  if (!listId) {
+    return {
+      success: false,
+      error: "Student list ID is required.",
+    };
+  }
 
   try {
     const result = await pool.query(
@@ -220,12 +250,15 @@ export async function deleteStudentList(listId: string) {
 
     return {
       success: false,
-      error: "Something went wrong while deleting the list.",
+      error: "Unable to delete student list.",
     };
   }
 }
 
-// search students
+// ============================================================
+// SEARCH STUDENTS
+// ============================================================
+
 export async function searchStudents(listId: string, query: string) {
   const admin = await requireAdmin();
 
@@ -239,7 +272,6 @@ export async function searchStudents(listId: string, query: string) {
   }
 
   try {
-    // First make sure this list belongs to the admin.
     const list = await pool.query(
       `
       SELECT id
@@ -301,12 +333,14 @@ export async function searchStudents(listId: string, query: string) {
   }
 }
 
-// add student to a list
+// ============================================================
+// ADD STUDENT TO LIST
+// ============================================================
+
 export async function addStudentToList(listId: string, studentId: string) {
   const admin = await requireAdmin();
 
   try {
-    // Verify the list belongs to this admin.
     const list = await pool.query(
       `
       SELECT id
@@ -324,7 +358,6 @@ export async function addStudentToList(listId: string, studentId: string) {
       };
     }
 
-    // Verify the target user is actually a student.
     const student = await pool.query(
       `
       SELECT id
@@ -368,7 +401,10 @@ export async function addStudentToList(listId: string, studentId: string) {
   }
 }
 
-// removing student from a list
+// ============================================================
+// REMOVE STUDENT FROM LIST
+// ============================================================
+
 export async function removeStudentFromList(listId: string, studentId: string) {
   const admin = await requireAdmin();
 
@@ -406,7 +442,10 @@ export async function removeStudentFromList(listId: string, studentId: string) {
   }
 }
 
-// get members of a list
+// ============================================================
+// GET LIST MEMBERS
+// ============================================================
+
 export async function getStudentListMembers(listId: string) {
   const admin = await requireAdmin();
 
