@@ -3,8 +3,7 @@
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/authorization";
 
-type QuizStatus = "draft" | "live";
-
+// types
 type SaveQuizEditorData = {
   quizId: string;
   title: string;
@@ -22,21 +21,29 @@ type SaveQuizEditorData = {
   }[];
 };
 
-/* -------------------------------------------------------------------------- */
-/* CREATE QUIZ                                                                */
-/* -------------------------------------------------------------------------- */
+// functions:-
+/*
+  createQuiz(): 
+  to create quiz with a 
+  title, description and duration
+  in database.
 
+  database tables used: quizzes
+*/
 export async function createQuiz(data: {
   title: string;
   description?: string;
   duration_minutes: number;
 }) {
+  // only admin can create quiz
   const admin = await requireAdmin();
 
+  // getting data ready
   const title = data.title?.trim();
   const description = data.description?.trim() || null;
   const durationMinutes = Number(data.duration_minutes);
 
+  // error handeling
   if (!title) {
     return {
       success: false,
@@ -56,6 +63,7 @@ export async function createQuiz(data: {
   }
 
   try {
+    // creating quiz
     const result = await pool.query(
       `
         INSERT INTO quizzes (
@@ -80,12 +88,13 @@ export async function createQuiz(data: {
       [title, description, admin.id, durationMinutes * 60],
     );
 
+    // returning the created quiz data
     return {
       success: true,
       quiz: result.rows[0],
     };
   } catch (error) {
-    console.error("Create quiz error:", error);
+    console.error("createQuiz() error:", error);
 
     return {
       success: false,
@@ -94,14 +103,75 @@ export async function createQuiz(data: {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* GET ADMIN QUIZZES                                                          */
-/* -------------------------------------------------------------------------- */
+/*
+  deleteQuiz():
+  it deletes a quiz of a admin
+  searching db by quiz's id and admin's id
 
+  database tabels used: quizzes
+*/
+export async function deleteQuiz(quizId: string) {
+  // only admin can delete a quiz
+  const admin = await requireAdmin();
+
+  // error handeling
+  // if quiz's id not provided
+  if (!quizId) {
+    return {
+      success: false,
+      error: "Quiz ID is required.",
+    };
+  }
+
+  try {
+    // deleting the quiz of this admin
+    const result = await pool.query(
+      `
+        DELETE FROM quizzes
+        WHERE id = $1
+          AND owner_id = $2
+        RETURNING id
+      `,
+      [quizId, admin.id],
+    );
+
+    // if the quiz not found, so didn't delete ofcourse.
+    if (result.rows.length === 0) {
+      return {
+        success: false,
+        error: "Quiz not found.",
+      };
+    }
+
+    // if deleted
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Delete quiz error:", error);
+
+    return {
+      success: false,
+      error:
+        "Unable to delete quiz. Make sure related records allow quiz deletion.",
+    };
+  }
+}
+
+/* 
+  getAdminQuizzes():
+  it fetches the particular admin's quizzes (all of them)
+  from database. Also with number of student attempts.
+  And the admin can see the quizzes that only he/she has been created.
+
+  database tables used: quizzes, quiz_attempts
+*/
 export async function getAdminQuizzes() {
+  // only admin can access
   const admin = await requireAdmin();
 
   try {
+    // get the list of all quizzes created by admin
     const result = await pool.query(
       `
         SELECT
@@ -129,7 +199,7 @@ export async function getAdminQuizzes() {
       quizzes: result.rows,
     };
   } catch (error) {
-    console.error("Get admin quizzes error:", error);
+    console.error("getAdminQuizzes() error:", error);
 
     return {
       success: false,
@@ -139,13 +209,19 @@ export async function getAdminQuizzes() {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* GET SINGLE QUIZ                                                            */
-/* -------------------------------------------------------------------------- */
+/*
+  getQuiz():
+  it returns only a particular quiz data
+  by searching database by admin's id and quiz's id
+  so that the quiz is visible to the admin which he/she created.
 
+  database table used: quizzes
+*/
 export async function getQuiz(quizId: string) {
+  // only admin can access this function
   const admin = await requireAdmin();
 
+  // if not quizId
   if (!quizId) {
     return {
       success: false,
@@ -153,6 +229,7 @@ export async function getQuiz(quizId: string) {
     };
   }
 
+  // if quizId
   try {
     const result = await pool.query(
       `
@@ -173,6 +250,7 @@ export async function getQuiz(quizId: string) {
       [quizId, admin.id],
     );
 
+    // if quiz not found
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -180,12 +258,13 @@ export async function getQuiz(quizId: string) {
       };
     }
 
+    // else returning the quiz
     return {
       success: true,
       quiz: result.rows[0],
     };
   } catch (error) {
-    console.error("Get quiz error:", error);
+    console.error("getQuiz() error:", error);
 
     return {
       success: false,
@@ -194,24 +273,20 @@ export async function getQuiz(quizId: string) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* SET QUIZ STATUS                                                            */
-/* -------------------------------------------------------------------------- */
-
 /*
- * This is the action used by the toggle on:
- *
- * /admin/quizzes/page.tsx
- *
- * Draft -> Live
- * Live  -> Draft
- *
- * The actual status change is performed on the server.
- */
+  setQuizStatus():
+  it helps admin to set the status of his/her particular quiz.
+  The function uses a TRANSACTION as I needed so many queries to execute.
+  The function not just set the quiz status, it validates the quiz itself if it is ready to publish
 
-export async function setQuizStatus(quizId: string, status: QuizStatus) {
+  database tables used: quizzes, questions, options
+*/
+export async function setQuizStatus(quizId: string, status: "draft" | "live") {
+  // only admin can set the quiz status
   const admin = await requireAdmin();
 
+  // error handeling
+  // if quiz's id not provided
   if (!quizId) {
     return {
       success: false,
@@ -219,6 +294,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
     };
   }
 
+  // if status is a vauge value (it should be either "draft" or "live")
   if (status !== "draft" && status !== "live") {
     return {
       success: false,
@@ -226,15 +302,14 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
     };
   }
 
+  // using TRANSACTION
   const client = await pool.connect();
 
   try {
+    // TRANSACTION BEGINS
     await client.query("BEGIN");
 
-    // ------------------------------------------------------------
-    // 1. Verify that the quiz belongs to this admin
-    // ------------------------------------------------------------
-
+    // 1. Verifing the quiz belongs to this admin
     const quizResult = await client.query(
       `
         SELECT
@@ -248,6 +323,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
       [quizId, admin.id],
     );
 
+    // if not belongs, ROLLBACK
     if (quizResult.rows.length === 0) {
       await client.query("ROLLBACK");
 
@@ -257,10 +333,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
       };
     }
 
-    // ------------------------------------------------------------
-    // 2. If publishing, validate the quiz first
-    // ------------------------------------------------------------
-
+    // 2. If making "live", quiz needs to be validated first!
     if (status === "live") {
       const validationResult = await client.query(
         `
@@ -296,10 +369,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
         [quizId],
       );
 
-      // ----------------------------------------------------------
       // Quiz must have at least one question
-      // ----------------------------------------------------------
-
       if (validationResult.rows.length === 0) {
         await client.query("ROLLBACK");
 
@@ -309,11 +379,9 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
         };
       }
 
-      // ----------------------------------------------------------
-      // Validate every question
-      // ----------------------------------------------------------
-
+      // Validating every question in that quiz
       for (const question of validationResult.rows) {
+        // question's text validation
         if (!question.question_text?.trim()) {
           await client.query("ROLLBACK");
 
@@ -323,6 +391,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
           };
         }
 
+        // question's marks validation
         if (
           !Number.isInteger(Number(question.marks)) ||
           Number(question.marks) <= 0
@@ -335,6 +404,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
           };
         }
 
+        // question's number of options validation
         if (Number(question.option_count) < 2) {
           await client.query("ROLLBACK");
 
@@ -344,6 +414,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
           };
         }
 
+        // question's correct answer selection validation
         if (Number(question.correct_count) !== 1) {
           await client.query("ROLLBACK");
 
@@ -353,6 +424,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
           };
         }
 
+        // question's option's text validation
         if (Number(question.empty_option_count) > 0) {
           await client.query("ROLLBACK");
 
@@ -364,16 +436,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
       }
     }
 
-    // ------------------------------------------------------------
     // 3. Change the quiz status
-    //
-    // IMPORTANT:
-    // quizzes.status is a PostgreSQL enum called quiz_status.
-    //
-    // Explicitly casting $1 prevents PostgreSQL from trying to
-    // infer $1 as both TEXT and quiz_status.
-    // ------------------------------------------------------------
-
     const result = await client.query(
       `
         UPDATE quizzes
@@ -411,10 +474,7 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
       [status, quizId, admin.id],
     );
 
-    // ------------------------------------------------------------
-    // 4. Make sure the update actually happened
-    // ------------------------------------------------------------
-
+    // 4. Making sure the update actually happened
     if (result.rows.length === 0) {
       await client.query("ROLLBACK");
 
@@ -424,83 +484,41 @@ export async function setQuizStatus(quizId: string, status: QuizStatus) {
       };
     }
 
-    // ------------------------------------------------------------
-    // 5. Commit
-    // ------------------------------------------------------------
-
+    // TRANSACTION COMMIT
     await client.query("COMMIT");
 
+    // returning the quiz which status has been changed by admin
     return {
       success: true,
       quiz: result.rows[0],
     };
   } catch (error) {
+    // ROLLBACK if something went wrong
     await client.query("ROLLBACK");
 
-    console.error("Set quiz status error:", error);
+    console.error("setQuizStatus() error:", error);
 
     return {
       success: false,
       error: "Unable to change quiz status.",
     };
   } finally {
+    // RELEASING CLIENT
     client.release();
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* DELETE QUIZ                                                                */
-/* -------------------------------------------------------------------------- */
+/*
+  getQuizForEditor():
+  this fuction just return quiz, that quiz's questions and their respective options data.
 
-export async function deleteQuiz(quizId: string) {
-  const admin = await requireAdmin();
-
-  if (!quizId) {
-    return {
-      success: false,
-      error: "Quiz ID is required.",
-    };
-  }
-
-  try {
-    const result = await pool.query(
-      `
-        DELETE FROM quizzes
-        WHERE id = $1
-          AND owner_id = $2
-        RETURNING id
-      `,
-      [quizId, admin.id],
-    );
-
-    if (result.rows.length === 0) {
-      return {
-        success: false,
-        error: "Quiz not found.",
-      };
-    }
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error("Delete quiz error:", error);
-
-    return {
-      success: false,
-      error:
-        "Unable to delete quiz. Make sure related records allow quiz deletion.",
-    };
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* GET QUIZ EDITOR DATA                                                       */
-/* -------------------------------------------------------------------------- */
-
+  database tabels used: quizzes, questions, options
+*/
 export async function getQuizForEditor(quizId: string) {
+  // only admin can get the data for the editor (because he/she is using the editor stupid :), Jk)
   const admin = await requireAdmin();
 
+  // if quiz ID not provided
   if (!quizId) {
     return {
       success: false,
@@ -509,6 +527,7 @@ export async function getQuizForEditor(quizId: string) {
   }
 
   try {
+    // getting the quiz data
     const quizResult = await pool.query(
       `
         SELECT
@@ -527,6 +546,7 @@ export async function getQuizForEditor(quizId: string) {
       [quizId, admin.id],
     );
 
+    // if quiz not found
     if (quizResult.rows.length === 0) {
       return {
         success: false,
@@ -534,6 +554,7 @@ export async function getQuizForEditor(quizId: string) {
       };
     }
 
+    // getting the quiz's question data
     const questionsResult = await pool.query(
       `
         SELECT
@@ -549,6 +570,7 @@ export async function getQuizForEditor(quizId: string) {
       [quizId],
     );
 
+    // getting quiz's question's option data
     const optionsResult = await pool.query(
       `
         SELECT
@@ -566,6 +588,7 @@ export async function getQuizForEditor(quizId: string) {
       [quizId],
     );
 
+    // returning the quiz data, quiz's questions data, quis'z questions' options data
     return {
       success: true,
       quiz: quizResult.rows[0],
@@ -573,7 +596,7 @@ export async function getQuizForEditor(quizId: string) {
       options: optionsResult.rows,
     };
   } catch (error) {
-    console.error("Get quiz editor error:", error);
+    console.error("getQuizForEditor() error:", error);
 
     return {
       success: false,
@@ -582,13 +605,17 @@ export async function getQuizForEditor(quizId: string) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* CREATE QUESTION                                                            */
-/* -------------------------------------------------------------------------- */
+/*
+  createQuestions():
+  it allows the functionality to create a question in a quiz.
 
+  database tables used: quizzes, questions
+*/
 export async function createQuestion(quizId: string) {
+  // only admin can create a question
   const admin = await requireAdmin();
 
+  // if quiz id not provided
   if (!quizId) {
     return {
       success: false,
@@ -597,6 +624,7 @@ export async function createQuestion(quizId: string) {
   }
 
   try {
+    // looking at quiz status
     const quizResult = await pool.query(
       `
         SELECT
@@ -609,6 +637,7 @@ export async function createQuestion(quizId: string) {
       [quizId, admin.id],
     );
 
+    // if quiz not found
     if (quizResult.rows.length === 0) {
       return {
         success: false,
@@ -616,13 +645,16 @@ export async function createQuestion(quizId: string) {
       };
     }
 
+    // if quiz is live
     if (quizResult.rows[0].status !== "draft") {
+      // it can't be edited, so the question can't be added too
       return {
         success: false,
         error: "Live quizzes cannot be edited.",
       };
     }
 
+    // next order of the question in quiz
     const orderResult = await pool.query(
       `
         SELECT COALESCE(MAX(question_order), 0) + 1 AS next_order
@@ -634,6 +666,7 @@ export async function createQuestion(quizId: string) {
 
     const nextOrder = Number(orderResult.rows[0].next_order);
 
+    // creating question
     const result = await pool.query(
       `
         INSERT INTO questions (
@@ -660,7 +693,7 @@ export async function createQuestion(quizId: string) {
       question: result.rows[0],
     };
   } catch (error) {
-    console.error("Create question error:", error);
+    console.error("createQuestion() error:", error);
 
     return {
       success: false,
@@ -669,13 +702,18 @@ export async function createQuestion(quizId: string) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* DELETE QUESTION                                                            */
-/* -------------------------------------------------------------------------- */
-
+/*
+  deleteQuestion():
+  it allows the functionality of deleting a question when quiz is in draft mode.
+  it also reorders the remaining questions in the quiz.
+  
+  database tables used: quizzes, questions, options
+*/
 export async function deleteQuestion(questionId: string) {
+  // only admin can delete a question
   const admin = await requireAdmin();
 
+  // if question id not provided
   if (!questionId) {
     return {
       success: false,
@@ -683,15 +721,14 @@ export async function deleteQuestion(questionId: string) {
     };
   }
 
+  // using TRANSACTION
   const client = await pool.connect();
 
   try {
+    // TRANSACTION BEGINS
     await client.query("BEGIN");
 
-    // ------------------------------------------------------------
-    // 1. Verify question belongs to this admin's draft quiz
-    // ------------------------------------------------------------
-
+    // 1. Verify question belongs to this admin and quiz is "draft"
     const questionResult = await client.query(
       `
         SELECT
@@ -709,6 +746,7 @@ export async function deleteQuestion(questionId: string) {
       [questionId, admin.id],
     );
 
+    // if no question found
     if (questionResult.rows.length === 0) {
       await client.query("ROLLBACK");
 
@@ -720,12 +758,7 @@ export async function deleteQuestion(questionId: string) {
 
     const quizId = questionResult.rows[0].quiz_id;
 
-    // ------------------------------------------------------------
     // 2. Delete the question's options first
-    //
-    // We do this explicitly instead of relying on ON DELETE CASCADE.
-    // ------------------------------------------------------------
-
     await client.query(
       `
         DELETE FROM options
@@ -734,10 +767,7 @@ export async function deleteQuestion(questionId: string) {
       [questionId],
     );
 
-    // ------------------------------------------------------------
     // 3. Delete the question
-    // ------------------------------------------------------------
-
     await client.query(
       `
         DELETE FROM questions
@@ -747,22 +777,7 @@ export async function deleteQuestion(questionId: string) {
       [questionId, quizId],
     );
 
-    // ------------------------------------------------------------
     // 4. Re-number the remaining questions
-    //
-    // This keeps the UI as:
-    //
-    // Question 1
-    // Question 2
-    // Question 3
-    //
-    // instead of:
-    //
-    // Question 1
-    // Question 3
-    // Question 4
-    // ------------------------------------------------------------
-
     const remainingQuestions = await client.query(
       `
         SELECT id
@@ -786,10 +801,7 @@ export async function deleteQuestion(questionId: string) {
       );
     }
 
-    // ------------------------------------------------------------
     // 5. Update quiz timestamp
-    // ------------------------------------------------------------
-
     await client.query(
       `
         UPDATE quizzes
@@ -800,6 +812,7 @@ export async function deleteQuestion(questionId: string) {
       [quizId, admin.id],
     );
 
+    // TRANSACTION COMMIT
     await client.query("COMMIT");
 
     return {
@@ -808,7 +821,7 @@ export async function deleteQuestion(questionId: string) {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    console.error("Delete question error:", error);
+    console.error("deleteQuestion() error:", error);
 
     return {
       success: false,
@@ -819,13 +832,17 @@ export async function deleteQuestion(questionId: string) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* CREATE OPTION                                                              */
-/* -------------------------------------------------------------------------- */
+/*
+  createOption():
+  it allows the functionality of creating options of a question in a quiz.
 
+  database tables used: quizzes, questions, options
+*/
 export async function createOption(questionId: string) {
+  // only admin can create options
   const admin = await requireAdmin();
 
+  // if question id not provided
   if (!questionId) {
     return {
       success: false,
@@ -834,6 +851,7 @@ export async function createOption(questionId: string) {
   }
 
   try {
+    // get question id and quiz status
     const questionResult = await pool.query(
       `
         SELECT
@@ -848,6 +866,7 @@ export async function createOption(questionId: string) {
       [questionId, admin.id],
     );
 
+    // if question not found
     if (questionResult.rows.length === 0) {
       return {
         success: false,
@@ -855,6 +874,7 @@ export async function createOption(questionId: string) {
       };
     }
 
+    // if quiz is live
     if (questionResult.rows[0].status !== "draft") {
       return {
         success: false,
@@ -862,6 +882,7 @@ export async function createOption(questionId: string) {
       };
     }
 
+    // next order of option
     const orderResult = await pool.query(
       `
         SELECT COALESCE(MAX(option_order), 0) + 1 AS next_order
@@ -873,6 +894,7 @@ export async function createOption(questionId: string) {
 
     const nextOrder = Number(orderResult.rows[0].next_order);
 
+    // create the option
     const result = await pool.query(
       `
         INSERT INTO options (
@@ -897,7 +919,7 @@ export async function createOption(questionId: string) {
       option: result.rows[0],
     };
   } catch (error) {
-    console.error("Create option error:", error);
+    console.error("createOption() error:", error);
 
     return {
       success: false,
@@ -906,19 +928,25 @@ export async function createOption(questionId: string) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* UPDATE OPTION                                                              */
-/* -------------------------------------------------------------------------- */
+/*
+  updateOpiton():
+  it enables the functionality of updating the option data of a question in a quiz.
 
+  database tables used: quizzes, questions, options
+*/
 export async function updateOption(data: {
   optionId: string;
   optionText: string;
   isCorrect: boolean;
 }) {
+  // only admin can update option data
   const admin = await requireAdmin();
 
+  // get option data from admin
   const optionText = data.optionText?.trim();
 
+  // error handling
+  // if option id not provided
   if (!data.optionId) {
     return {
       success: false,
@@ -926,6 +954,7 @@ export async function updateOption(data: {
     };
   }
 
+  // if option text not provided
   if (!optionText) {
     return {
       success: false,
@@ -934,6 +963,7 @@ export async function updateOption(data: {
   }
 
   try {
+    // updating the option data
     const result = await pool.query(
       `
         UPDATE options o
@@ -957,6 +987,7 @@ export async function updateOption(data: {
       [optionText, Boolean(data.isCorrect), data.optionId, admin.id],
     );
 
+    // if option not found
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -969,7 +1000,7 @@ export async function updateOption(data: {
       option: result.rows[0],
     };
   } catch (error) {
-    console.error("Update option error:", error);
+    console.error("updateOption() error:", error);
 
     return {
       success: false,
@@ -978,17 +1009,22 @@ export async function updateOption(data: {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* SAVE ENTIRE QUIZ                                                           */
-/* -------------------------------------------------------------------------- */
+/*
+  saveQuizEditor():
+  it enables the save funcitonality to the quiz editor.
 
+  database tables used: 
+*/
 export async function saveQuizEditor(data: SaveQuizEditorData) {
+  // only admin can have the save functionality
   const admin = await requireAdmin();
 
+  // getting data of quiz from editor
   const title = data.title?.trim();
   const description = data.description?.trim() || null;
   const durationMinutes = Number(data.durationMinutes);
 
+  // if quiz id not provided
   if (!data.quizId) {
     return {
       success: false,
@@ -996,6 +1032,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
     };
   }
 
+  // if title not given
   if (!title) {
     return {
       success: false,
@@ -1003,6 +1040,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
     };
   }
 
+  // if duration is vague
   if (
     !Number.isInteger(durationMinutes) ||
     durationMinutes < 1 ||
@@ -1014,16 +1052,9 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
     };
   }
 
-  /*
-   * IMPORTANT:
-   *
-   * Status is intentionally NOT accepted here anymore.
-   *
-   * The editor only saves quiz content.
-   * Publishing/unpublishing is controlled from the quiz list toggle.
-   */
-
+  // Validating all the questions of the quiz before saving
   for (const question of data.questions) {
+    // question must has text
     if (!question.questionText.trim()) {
       return {
         success: false,
@@ -1031,6 +1062,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
       };
     }
 
+    // checking the marks
     if (
       !Number.isInteger(Number(question.marks)) ||
       Number(question.marks) <= 0
@@ -1041,7 +1073,9 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
       };
     }
 
+    // validating the options
     for (const option of question.options) {
+      // option must has text
       if (!option.optionText.trim()) {
         return {
           success: false,
@@ -1051,11 +1085,14 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
     }
   }
 
+  // using TRANSACTION
   const client = await pool.connect();
 
   try {
+    // TRANSACTION BEGINS
     await client.query("BEGIN");
 
+    // getting the quiz status
     const quizResult = await client.query(
       `
         SELECT
@@ -1069,6 +1106,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
       [data.quizId, admin.id],
     );
 
+    // if quiz not found
     if (quizResult.rows.length === 0) {
       await client.query("ROLLBACK");
 
@@ -1078,9 +1116,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
       };
     }
 
-    /*
-     * Never allow content editing on a live quiz.
-     */
+    // if quiz is live
     if (quizResult.rows[0].status !== "draft") {
       await client.query("ROLLBACK");
 
@@ -1090,6 +1126,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
       };
     }
 
+    // saving (updating) the quiz
     await client.query(
       `
         UPDATE quizzes
@@ -1104,6 +1141,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
       [title, description, durationMinutes * 60, data.quizId, admin.id],
     );
 
+    // saving all questions
     for (const question of data.questions) {
       const questionResult = await client.query(
         `
@@ -1128,10 +1166,12 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
         ],
       );
 
+      // if a question not found
       if (questionResult.rows.length === 0) {
         throw new Error(`Question ${question.id} was not found.`);
       }
 
+      // saving every option
       for (const option of question.options) {
         const optionResult = await client.query(
           `
@@ -1159,12 +1199,14 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
           ],
         );
 
+        // if an option not found
         if (optionResult.rows.length === 0) {
           throw new Error(`Option ${option.id} was not found.`);
         }
       }
     }
 
+    // TRANSACION COMMIT
     await client.query("COMMIT");
 
     return {
@@ -1173,7 +1215,7 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
   } catch (error) {
     await client.query("ROLLBACK");
 
-    console.error("Save quiz editor error:", error);
+    console.error("saveQuizEditor() error:", error);
 
     return {
       success: false,
@@ -1184,13 +1226,17 @@ export async function saveQuizEditor(data: SaveQuizEditorData) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* DELETE OPTION                                                              */
-/* -------------------------------------------------------------------------- */
+/*
+  deleteOption():
+  to enable the delete option functionality in editor
 
+  database tables used: questions, quizzes, options
+*/
 export async function deleteOption(optionId: string) {
+  // admin only usage
   const admin = await requireAdmin();
 
+  // if option's ID not provided
   if (!optionId) {
     return {
       success: false,
@@ -1199,6 +1245,7 @@ export async function deleteOption(optionId: string) {
   }
 
   try {
+    // delete option
     const result = await pool.query(
       `
         DELETE FROM options o
@@ -1214,6 +1261,7 @@ export async function deleteOption(optionId: string) {
       [optionId, admin.id],
     );
 
+    // if option not found
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -1225,7 +1273,7 @@ export async function deleteOption(optionId: string) {
       success: true,
     };
   } catch (error) {
-    console.error("Delete option error:", error);
+    console.error("deleteOption() error:", error);
 
     return {
       success: false,
@@ -1234,13 +1282,17 @@ export async function deleteOption(optionId: string) {
   }
 }
 
-// ============================================================
-// GET STUDENT LISTS ASSIGNED TO A QUIZ
-// ============================================================
+/*
+  getQuizStudentLists():
+  to make the student lists available in editor so that the list could be assigned to that quiz.
 
+  database tables used: quizzes, get_student_lists, student_lists
+*/
 export async function getQuizStudentLists(quizId: string) {
+  // admin only access
   const admin = await requireAdmin();
 
+  // if quiz id not provided
   if (!quizId) {
     return {
       success: false,
@@ -1250,6 +1302,7 @@ export async function getQuizStudentLists(quizId: string) {
   }
 
   try {
+    // checking quiz
     const quiz = await pool.query(
       `
       SELECT id
@@ -1260,6 +1313,7 @@ export async function getQuizStudentLists(quizId: string) {
       [quizId, admin.id],
     );
 
+    // if quiz not found
     if (quiz.rows.length === 0) {
       return {
         success: false,
@@ -1268,6 +1322,7 @@ export async function getQuizStudentLists(quizId: string) {
       };
     }
 
+    // if quiz found, get the available studentlist details
     const result = await pool.query(
       `
       SELECT
@@ -1296,7 +1351,7 @@ export async function getQuizStudentLists(quizId: string) {
       lists: result.rows,
     };
   } catch (error) {
-    console.error("Get quiz student lists error:", error);
+    console.error("getQuizStudentLists() error:", error);
 
     return {
       success: false,
@@ -1306,13 +1361,17 @@ export async function getQuizStudentLists(quizId: string) {
   }
 }
 
-// ============================================================
-// ASSIGN STUDENT LIST TO QUIZ
-// ============================================================
+/*
+  assignStudentListToQuiz():
+  to enable the functionality to assign the quiz a student list.
 
+  database tables used: quizzes, student_lists, quiz_student_lists
+*/
 export async function assignStudentListToQuiz(quizId: string, listId: string) {
+  // only admin can assign the student lists to quiz
   const admin = await requireAdmin();
 
+  // if quiz id or list id not provided.
   if (!quizId || !listId) {
     return {
       success: false,
@@ -1333,6 +1392,7 @@ export async function assignStudentListToQuiz(quizId: string, listId: string) {
       [quizId, admin.id],
     );
 
+    // if quiz not found or is live
     if (quiz.rows.length === 0) {
       return {
         success: false,
@@ -1351,6 +1411,7 @@ export async function assignStudentListToQuiz(quizId: string, listId: string) {
       [listId, admin.id],
     );
 
+    // if list not found
     if (list.rows.length === 0) {
       return {
         success: false,
@@ -1358,6 +1419,7 @@ export async function assignStudentListToQuiz(quizId: string, listId: string) {
       };
     }
 
+    // assign list to quiz
     await pool.query(
       `
       INSERT INTO quiz_student_lists (
@@ -1375,7 +1437,7 @@ export async function assignStudentListToQuiz(quizId: string, listId: string) {
       success: true,
     };
   } catch (error) {
-    console.error("Assign student list to quiz error:", error);
+    console.error("assignStudentListToQuiz() error:", error);
 
     return {
       success: false,
@@ -1384,16 +1446,20 @@ export async function assignStudentListToQuiz(quizId: string, listId: string) {
   }
 }
 
-// ============================================================
-// REMOVE STUDENT LIST FROM QUIZ
-// ============================================================
+/*
+  removeStudentListFromQuiz():
+  to enable the functionality of un-assigning the studentlist from a quiz
 
+  database tables used: quizzes, quiz_student_lists, student_lists
+*/
 export async function removeStudentListFromQuiz(
   quizId: string,
   listId: string,
 ) {
+  // only admin can unassign a student list to a quiz
   const admin = await requireAdmin();
 
+  // if quiz id or list id not provided
   if (!quizId || !listId) {
     return {
       success: false,
@@ -1402,6 +1468,7 @@ export async function removeStudentListFromQuiz(
   }
 
   try {
+    // unassigning the student list from quiz
     const result = await pool.query(
       `
       DELETE FROM quiz_student_lists qsl
@@ -1418,6 +1485,7 @@ export async function removeStudentListFromQuiz(
       [quizId, listId, admin.id],
     );
 
+    // if studentlist not found or quiz is live
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -1429,7 +1497,7 @@ export async function removeStudentListFromQuiz(
       success: true,
     };
   } catch (error) {
-    console.error("Remove student list from quiz error:", error);
+    console.error("removeStudentListFromQuiz() error:", error);
 
     return {
       success: false,
@@ -1438,10 +1506,18 @@ export async function removeStudentListFromQuiz(
   }
 }
 
+/*
+  IS THIS A USELESS FUNCTION ????
+  getAdminStudentLists():
+
+  database tables used: 
+*/
 export async function getAdminStudentLists() {
+  // only admin access
   const admin = await requireAdmin();
 
   try {
+    // getting the student lists of this admin
     const result = await pool.query(
       `
       SELECT
@@ -1463,7 +1539,7 @@ export async function getAdminStudentLists() {
       lists: result.rows,
     };
   } catch (error) {
-    console.error("Get admin student lists error:", error);
+    console.error("getAdminStudentLists() error:", error);
 
     return {
       success: false,

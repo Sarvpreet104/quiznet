@@ -91,30 +91,21 @@ const QuizEditor = ({
 
   const [title, setTitle] = useState(initialQuiz.title);
   const [description, setDescription] = useState(initialQuiz.description ?? "");
-
   const [duration, setDuration] = useState(
     String(Math.floor(initialQuiz.duration_seconds / 60)),
   );
-
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
-
   const [studentLists, setStudentLists] =
     useState<StudentList[]>(initialStudentLists);
-
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(
     null,
   );
-
   const [isDeletingQuiz, setIsDeletingQuiz] = useState(false);
-
   const [assigningListId, setAssigningListId] = useState<string | null>(null);
-
   const [removingListId, setRemovingListId] = useState<string | null>(null);
-
   const [error, setError] = useState<string | null>(null);
-
   const [success, setSuccess] = useState(false);
 
   const isDraft = initialQuiz.status === "draft";
@@ -929,12 +920,14 @@ const QuizEditor = ({
         {/* ================================================== */}
 
         <section>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold">Questions</h2>
+          <div className="mb-4 flex flex-col sm:flex-row justify-between contain-content gap-4">
+            <div>
+              <h2 className="text-xl font-bold">Questions</h2>
 
-            <p className="mt-1 text-sm text-muted-foreground">
-              Add questions, choices and mark the correct answer.
-            </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Add questions, choices and mark the correct answer.
+              </p>
+            </div>
           </div>
 
           {questions.length === 0 ? (

@@ -14,7 +14,6 @@ CREATE TYPE quiz_status AS ENUM (
     'live'
 );
 
-
 -- =========================
 -- USERS
 -- =========================
@@ -35,7 +34,7 @@ CREATE TABLE users (
     role user_role NOT NULL DEFAULT 'student',
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 );
 
 
@@ -93,7 +92,7 @@ CREATE TABLE quizzes (
 
     description TEXT,
 
-    owner_id UUID NOT NULL
+    owner_id UUID NOT NULL 
         REFERENCES users(id)
         ON DELETE CASCADE,
 
@@ -114,29 +113,6 @@ ON quizzes(owner_id);
 
 CREATE INDEX idx_quizzes_status
 ON quizzes(status);
-
-
--- =========================
--- QUIZ ↔ STUDENT LISTS
--- =========================
-
-CREATE TABLE quiz_lists (
-    quiz_id UUID NOT NULL
-        REFERENCES quizzes(id)
-        ON DELETE CASCADE,
-
-    list_id UUID NOT NULL
-        REFERENCES student_lists(id)
-        ON DELETE CASCADE,
-
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY (quiz_id, list_id)
-);
-
-CREATE INDEX idx_quiz_lists_list
-ON quiz_lists(list_id);
-
 
 -- =========================
 -- QUESTIONS

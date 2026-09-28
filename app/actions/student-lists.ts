@@ -3,15 +3,21 @@
 import pool from "@/lib/db";
 import { requireAdmin } from "@/lib/authorization";
 
-// ============================================================
-// CREATE STUDENT LIST
-// ============================================================
+/*
+  createStudentList():
+  to enable the functionality to create a studentlist.
 
+  database tables used: student_lists
+*/
 export async function createStudentList(name: string) {
+  // only admin can create a student list
   const admin = await requireAdmin();
 
+  // getting the data
   const trimmedName = name.trim();
 
+  // error handling
+  // if list name not provided
   if (!trimmedName) {
     return {
       success: false,
@@ -19,6 +25,7 @@ export async function createStudentList(name: string) {
     };
   }
 
+  // if list name too long
   if (trimmedName.length > 100) {
     return {
       success: false,
@@ -27,6 +34,7 @@ export async function createStudentList(name: string) {
   }
 
   try {
+    // create a student list
     const result = await pool.query(
       `
       INSERT INTO student_lists (
@@ -49,7 +57,7 @@ export async function createStudentList(name: string) {
       list: result.rows[0],
     };
   } catch (error) {
-    console.error("Create student list error:", error);
+    console.error("createStudentList() error:", error);
 
     return {
       success: false,
@@ -58,10 +66,12 @@ export async function createStudentList(name: string) {
   }
 }
 
-// ============================================================
-// GET STUDENT LISTS
-// ============================================================
+/*
+  getStudentLists():
+  to fetch studentlists of this admin.
 
+  database tables used: student_lists, student_list_members
+*/
 export async function getStudentLists() {
   const admin = await requireAdmin();
 
@@ -93,7 +103,7 @@ export async function getStudentLists() {
       lists: result.rows,
     };
   } catch (error) {
-    console.error("Get student lists error:", error);
+    console.error("getStudentLists() error:", error);
 
     return {
       success: false,
@@ -103,14 +113,18 @@ export async function getStudentLists() {
   }
 }
 
-// ============================================================
-// GET SINGLE STUDENT LIST
-// ============================================================
+/*
+  getStudentList():
+  to fetch a single studentlist of this admin.
 
+  database tables used: student_lists
+*/
 export async function getStudentList(listId: string) {
+  // only admin access
   const admin = await requireAdmin();
 
   try {
+    // searching list
     const result = await pool.query(
       `
       SELECT
@@ -126,6 +140,7 @@ export async function getStudentList(listId: string) {
       [listId, admin.id],
     );
 
+    // if list not found
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -138,7 +153,7 @@ export async function getStudentList(listId: string) {
       list: result.rows[0],
     };
   } catch (error) {
-    console.error("Get student list error:", error);
+    console.error("getStudentList() error:", error);
 
     return {
       success: false,
@@ -147,15 +162,20 @@ export async function getStudentList(listId: string) {
   }
 }
 
-// ============================================================
-// UPDATE STUDENT LIST
-// ============================================================
+/*
+  updateStudentList():
+  to enable the editing of the list
 
+  database tables used: student_lists
+*/
 export async function updateStudentList(listId: string, name: string) {
+  // only admin can edit
   const admin = await requireAdmin();
 
+  // get edited data
   const trimmedName = name.trim();
 
+  // if data not valid
   if (!trimmedName) {
     return {
       success: false,
@@ -171,6 +191,7 @@ export async function updateStudentList(listId: string, name: string) {
   }
 
   try {
+    // update the list
     const result = await pool.query(
       `
       UPDATE student_lists
@@ -189,6 +210,7 @@ export async function updateStudentList(listId: string, name: string) {
       [trimmedName, listId, admin.id],
     );
 
+    // if list not found
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -201,7 +223,7 @@ export async function updateStudentList(listId: string, name: string) {
       list: result.rows[0],
     };
   } catch (error) {
-    console.error("Update student list error:", error);
+    console.error("updateStudentList() error:", error);
 
     return {
       success: false,
@@ -210,13 +232,17 @@ export async function updateStudentList(listId: string, name: string) {
   }
 }
 
-// ============================================================
-// DELETE STUDENT LIST
-// ============================================================
+/*
+  deleteStudentList():
+  to enable the deletion of the list
 
+  database tables used: student_lists
+*/
 export async function deleteStudentList(listId: string) {
+  // only admin can delete list
   const admin = await requireAdmin();
 
+  // if list id not provided
   if (!listId) {
     return {
       success: false,
@@ -225,6 +251,7 @@ export async function deleteStudentList(listId: string) {
   }
 
   try {
+    // delete list
     const result = await pool.query(
       `
       DELETE FROM student_lists
@@ -235,6 +262,7 @@ export async function deleteStudentList(listId: string) {
       [listId, admin.id],
     );
 
+    // if list not found
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -246,7 +274,7 @@ export async function deleteStudentList(listId: string) {
       success: true,
     };
   } catch (error) {
-    console.error("Delete student list error:", error);
+    console.error("deleteStudentList() error:", error);
 
     return {
       success: false,
@@ -255,15 +283,20 @@ export async function deleteStudentList(listId: string) {
   }
 }
 
-// ============================================================
-// SEARCH STUDENTS
-// ============================================================
+/*
+  searchStudents():
+  to enable the searching for students to add in the list.
 
+  database tables used: student_lists, users, student_list_members
+*/
 export async function searchStudents(listId: string, query: string) {
+  // only admin feature
   const admin = await requireAdmin();
 
+  // get the search query
   const trimmedQuery = query.trim();
 
+  // if query is null, give empty list
   if (!trimmedQuery) {
     return {
       success: true,
@@ -272,6 +305,7 @@ export async function searchStudents(listId: string, query: string) {
   }
 
   try {
+    // fetching this student list
     const list = await pool.query(
       `
       SELECT id
@@ -282,6 +316,7 @@ export async function searchStudents(listId: string, query: string) {
       [listId, admin.id],
     );
 
+    // if list not found
     if (list.rows.length === 0) {
       return {
         success: false,
@@ -290,6 +325,7 @@ export async function searchStudents(listId: string, query: string) {
       };
     }
 
+    // searching the students based on query which are not already in this list
     const result = await pool.query(
       `
       SELECT
@@ -323,7 +359,7 @@ export async function searchStudents(listId: string, query: string) {
       students: result.rows,
     };
   } catch (error) {
-    console.error("Search students error:", error);
+    console.error("searchStudents() error:", error);
 
     return {
       success: false,
@@ -333,14 +369,18 @@ export async function searchStudents(listId: string, query: string) {
   }
 }
 
-// ============================================================
-// ADD STUDENT TO LIST
-// ============================================================
+/*
+  addStudentToList():
+  it helps in adding a student in the list.
 
+  database tables used: student_lists, users, student_list_members
+*/
 export async function addStudentToList(listId: string, studentId: string) {
+  // admin only
   const admin = await requireAdmin();
 
   try {
+    // get this list
     const list = await pool.query(
       `
       SELECT id
@@ -351,6 +391,7 @@ export async function addStudentToList(listId: string, studentId: string) {
       [listId, admin.id],
     );
 
+    // if list not found
     if (list.rows.length === 0) {
       return {
         success: false,
@@ -358,6 +399,7 @@ export async function addStudentToList(listId: string, studentId: string) {
       };
     }
 
+    // get the student
     const student = await pool.query(
       `
       SELECT id
@@ -368,6 +410,7 @@ export async function addStudentToList(listId: string, studentId: string) {
       [studentId],
     );
 
+    // if student not found
     if (student.rows.length === 0) {
       return {
         success: false,
@@ -375,6 +418,7 @@ export async function addStudentToList(listId: string, studentId: string) {
       };
     }
 
+    // add student to this list
     await pool.query(
       `
       INSERT INTO student_list_members (
@@ -392,7 +436,7 @@ export async function addStudentToList(listId: string, studentId: string) {
       success: true,
     };
   } catch (error) {
-    console.error("Add student to list error:", error);
+    console.error("addStudentToList() error:", error);
 
     return {
       success: false,
@@ -401,14 +445,18 @@ export async function addStudentToList(listId: string, studentId: string) {
   }
 }
 
-// ============================================================
-// REMOVE STUDENT FROM LIST
-// ============================================================
+/*
+  removeStudentFromList():
+  it helps in removing a student from the list.
 
+  database tables used: student_lists, student_list_members
+*/
 export async function removeStudentFromList(listId: string, studentId: string) {
+  // only admin
   const admin = await requireAdmin();
 
   try {
+    // remove the student from the list
     const result = await pool.query(
       `
       DELETE FROM student_list_members slm
@@ -422,6 +470,7 @@ export async function removeStudentFromList(listId: string, studentId: string) {
       [listId, studentId, admin.id],
     );
 
+    // if student not found in list
     if (result.rows.length === 0) {
       return {
         success: false,
@@ -433,7 +482,7 @@ export async function removeStudentFromList(listId: string, studentId: string) {
       success: true,
     };
   } catch (error) {
-    console.error("Remove student from list error:", error);
+    console.error("removeStudentFromList() error:", error);
 
     return {
       success: false,
@@ -442,14 +491,18 @@ export async function removeStudentFromList(listId: string, studentId: string) {
   }
 }
 
-// ============================================================
-// GET LIST MEMBERS
-// ============================================================
+/*
+  getStudentListMembers():
+  it fetches all the members of a list
 
+  database tables used: student_lists, student_list_members
+*/
 export async function getStudentListMembers(listId: string) {
+  // only admin
   const admin = await requireAdmin();
 
   try {
+    // fetch members of the list
     const result = await pool.query(
       `
       SELECT
@@ -477,7 +530,7 @@ export async function getStudentListMembers(listId: string) {
       members: result.rows,
     };
   } catch (error) {
-    console.error("Get list members error:", error);
+    console.error("getStudentListMembers() error:", error);
 
     return {
       success: false,
